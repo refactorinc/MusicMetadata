@@ -8,29 +8,37 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MusicMetadata
+namespace MusicMetadata.Persistence
 {
     static class FileSystem
     {
         static public IEnumerable<DirectoryInfo> QueryLeafFoldersOf(string path)
         {
-            Debug.WriteLine("QueryLeafFoldersOf({0}) on Thread {1}", path, Thread.CurrentThread.ManagedThreadId);
+            Debug.WriteLine("[{1}] QueryLeafFoldersOf({0})", path, Thread.CurrentThread.ManagedThreadId);
             var folder = new DirectoryInfo(path);
             var subFolders = folder.EnumerateDirectoriesSafe("*", SearchOption.AllDirectories);
             return subFolders.Except(subFolders.Select(x => x.Parent), new DirectoryInfoEqualityComparer());
         }
 
-        static public IEnumerable<Metadata> QueryMetadataOf(string path)
+        static public IEnumerable<MetadataDto> QueryMetadataOf(string path)
         {
-            Debug.WriteLine("QueryMetadataOf({0}) on Thread {1}", path, Thread.CurrentThread.ManagedThreadId);
+            Debug.WriteLine("[{1}] QueryMetadataOf({0})", path, Thread.CurrentThread.ManagedThreadId);
             var folder = new DirectoryInfo(path);
-            var metadataPaths = folder.EnumerateFiles("*.wav").Select(x => Regex.Replace(x.FullName, @"^(.*\.)wav$", "$1xml", RegexOptions.IgnoreCase));
-            return MetadataFactory.MaterializeFor(metadataPaths);
+            var files = folder.EnumerateFiles("*.wav").Select(x => Regex.Replace(x.FullName, @"^(.*\.)wav$", "$1xml", RegexOptions.IgnoreCase));
+            return MetadataFactory.MaterializeFor(files);
         }
 
-        static public void Save(Metadata metadataFile)
+        static public void Save(IEnumerable<MetadataDto> objects)
         {
-            MetadataStore.Write(metadataFile);
+            foreach (var dto in objects)
+            {
+                Save(dto);
+            }
+        }
+
+        static public void Save(MetadataDto dto)
+        {
+            MetadataStore.Write(dto);
         }
     }
 

@@ -85,12 +85,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="MetadataFactory.cs" />
-    <Compile Include="MetadataStore.cs" />
-    <Compile Include="FileSystem.cs" />
+    <Compile Include="Persistence\IdentityMap.cs" />
+    <Compile Include="Persistence\MetadataFactory.cs" />
+    <Compile Include="Persistence\MetadataStore.cs" />
+    <Compile Include="Persistence\FileSystem.cs" />
     <Compile Include="FolderViewModel.cs" />
     <Compile Include="AlbumMetadataViewModel.cs" />
-    <Compile Include="Metadata.cs" />
+    <Compile Include="Persistence\MetadataDto.cs" />
     <Compile Include="NullableInt32ToBooleanConverter.cs" />
     <Compile Include="Settings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -100,6 +101,12 @@
     <Compile Include="TextBoxInputMask.cs" />
     <Compile Include="TrackMetadataViewModel.cs" />
     <Compile Include="TrackNumberConverter.cs" />
+    <Compile Include="ViewModels\AlbumViewModel.cs" />
+    <Compile Include="ViewModels\AlbumViewModelFactory.cs" />
+    <Compile Include="ViewModels\DiscViewModel.cs" />
+    <Compile Include="ViewModels\DiscViewModelCollection.cs" />
+    <Compile Include="ViewModels\TrackViewModel.cs" />
+    <Compile Include="ViewModels\TrackViewModelCollection.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -155,6 +162,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\View-refresh.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\accuraterip.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\perfecttunes-accuraterip-med.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

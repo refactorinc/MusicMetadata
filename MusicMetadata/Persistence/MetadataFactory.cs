@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace MusicMetadata
+namespace MusicMetadata.Persistence
 {
     static class MetadataFactory
     {
-        static internal IEnumerable<Metadata> MaterializeFor(IEnumerable<string> filePaths)
+        static internal IEnumerable<MetadataDto> MaterializeFor(IEnumerable<string> filePaths)
         {
             filePaths = filePaths.ToList();
             if (filePaths.Any())
@@ -17,25 +17,25 @@ namespace MusicMetadata
                 var discCount = tracksPerDisc.Max(x => x.Item1);
                 foreach (var filePath in filePaths)
                 {
-                    Metadata metadata = null;
+                    MetadataDto dto= null;
                     try
                     {
-                        metadata = MetadataStore.Read(filePath);
+                        dto = MetadataStore.Read(filePath);
                     }
                     catch
                     {
-                        metadata = new Metadata(filePath) { IsBroken = true };
                     }
-                    if (metadata == null)
+                    if (dto == null)
                     {
                         var discAndTrack = ParseDiscAndTrack(filePath);
-                        metadata = new Metadata(filePath)
+                        dto = new MetadataDto(filePath)
                         {
                             Track = String.Format("{0}/{1}", discAndTrack.Item2, tracksPerDisc.Single(x => x.Item1 == discAndTrack.Item1).Item2),
                             Disc = String.Format("{0}/{1}", discAndTrack.Item1, discCount),
                         };
                     }
-                    yield return metadata;
+                    IdentityMap.Put(dto);
+                    yield return dto;
                 }
             }
         }

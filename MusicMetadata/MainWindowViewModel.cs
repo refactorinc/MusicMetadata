@@ -16,6 +16,8 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
+using MusicMetadata.Persistence;
+using MusicMetadata.ViewModels;
 
 namespace MusicMetadata
 {
@@ -23,7 +25,7 @@ namespace MusicMetadata
     {
         public MainWindowViewModel()
         {
-            Debug.WriteLine("MainWindowViewModel.ctor on Thread {0}", Thread.CurrentThread.ManagedThreadId);
+            Debug.WriteLine("[{0}] .ctor MainWindowViewModel", Thread.CurrentThread.ManagedThreadId);
 
             System.Windows.Application.Current.Exit += (sender, args) =>
                 {
@@ -37,7 +39,7 @@ namespace MusicMetadata
             {
                 SelectedPath = defaultPath;
             }
-            SetFilter();
+            //SetFilter();
         }
 
         public int Top
@@ -136,33 +138,30 @@ namespace MusicMetadata
                 .Subscribe(Folders.Add);//, SetFilter);
         }
 
-        private void SetFilter()
-        {
-            Debug.WriteLine("SetFilter on Thread {0}", Thread.CurrentThread.ManagedThreadId);
-            var collectionView = new CollectionViewSource { Source = Folders }.View;
-            collectionView.Filter = x => ((FolderViewModel)x).HasTracks;
-            var collectionViewLiveShaping = collectionView as ICollectionViewLiveShaping;
-            collectionViewLiveShaping.LiveFilteringProperties.Add("HasTracks");
-            collectionViewLiveShaping.IsLiveFiltering = true;
-            FoldersView = collectionViewLiveShaping;
-        }
+        //private void SetFilter()
+        //{
+        //    Debug.WriteLine("SetFilter on Thread {0}", Thread.CurrentThread.ManagedThreadId);
+        //    var collectionView = new CollectionViewSource { Source = Folders }.View;
+        //    collectionView.Filter = x => ((FolderViewModel)x).HasTracks;
+        //    var collectionViewLiveShaping = collectionView as ICollectionViewLiveShaping;
+        //    collectionViewLiveShaping.LiveFilteringProperties.Add("HasTracks");
+        //    collectionViewLiveShaping.IsLiveFiltering = true;
+        //    FoldersView = collectionViewLiveShaping;
+        //}
 
-        private ICollectionViewLiveShaping _foldersView;
+        //private ICollectionViewLiveShaping _foldersView;
 
-        public ICollectionViewLiveShaping FoldersView
-        {
-            get { return _foldersView; }
-            set {
-                _foldersView = value;
-                RaisePropertyChanged();
-            }
-        }
+        //public ICollectionViewLiveShaping FoldersView
+        //{
+        //    get { return _foldersView; }
+        //    set {
+        //        _foldersView = value;
+        //        RaisePropertyChanged();
+        //    }
+        //}
 
         private ObservableCollection<FolderViewModel> _folders = new ObservableCollection<FolderViewModel>();
-        public ObservableCollection<FolderViewModel> Folders
-        {
-            get { return _folders; }
-        }
+        public ObservableCollection<FolderViewModel> Folders { get { return _folders; } }
 
         private FolderViewModel _selectedFolder;
         public FolderViewModel SelectedFolder
@@ -181,9 +180,10 @@ namespace MusicMetadata
 
         private void Save()
         {
-            if (SelectedFolder != null && SelectedFolder.AlbumMetadata != null)
+            if (SelectedFolder != null && SelectedFolder.Album != null)
             {
-                SelectedFolder.AlbumMetadata.Save();
+                var objects = AlbumViewModelFactory.FromViewModel(SelectedFolder.Album);
+                FileSystem.Save(objects);
             }
         }
     }

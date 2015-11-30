@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Xml;
 
-namespace MusicMetadata
+namespace MusicMetadata.Persistence
 {
     static class MetadataStore
     {
@@ -19,8 +19,9 @@ namespace MusicMetadata
         const string ALBUM_ARTIST = "Album Artist";
         const string COMPILATION = "Compilation";
         const string DISC = "Disc";
+        const string ACCURATERIPDISCID = "AccurateRipDiscId";
 
-        static IDictionary<string, Action<Metadata, string>> Map = new Dictionary<string, Action<Metadata, string>>
+        static IDictionary<string, Action<MetadataDto, string>> Map = new Dictionary<string, Action<MetadataDto, string>>
         {
             { ARTIST, (data, text) => data.Artist = text },
             { TITLE, (data, text) => data.Title = text },
@@ -28,19 +29,20 @@ namespace MusicMetadata
             { TRACK, (data, text) => data.Track = text },
             { YEAR, (data, text) => data.Year = text.ToNullableInt32() },
             { GENRE, (data, text) => data.Genre = text },
+            { ACCURATERIPDISCID, (data, text) => data.AccurateRipDiscId = text },
             { ALBUM_ARTIST, (data, text) => data.AlbumArtist = text },
             { COMPILATION, (data, text) => data.Compilation = text.ToNullableInt32() },
             { DISC, (data, text) => data.Disc = text },
         };
 
-        static internal Metadata Read(string filePath)
+        static internal MetadataDto Read(string filePath)
         {
             lock (_lock)
             {
                 var file = new FileInfo(filePath);
                 if (file.Exists)
                 {
-                    var result = new Metadata(filePath);
+                    var result = new MetadataDto(filePath);
                     using (var stream = file.OpenRead())
                     {
                         var document = new XmlDocument();
@@ -63,11 +65,11 @@ namespace MusicMetadata
             }
         }
 
-        static internal void Write(Metadata data)
+        static internal void Write(MetadataDto dto)
         {
             lock (_lock)
             {
-                using (var stream = new FileStream(data.FilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var stream = new FileStream(dto.Id, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var writer = new XmlTextWriter(stream, Encoding.UTF8))
                 {
                     writer.Formatting = Formatting.Indented;
@@ -79,16 +81,17 @@ namespace MusicMetadata
                     writer.WriteStartElement("SourceFile");
                     writer.WriteStartElement("IDTags");
 
-                    writer.WriteMandatoryElement(data.Artist, ARTIST);
-                    writer.WriteMandatoryElement(data.Title, TITLE);
-                    writer.WriteMandatoryElement(data.Album, ALBUM);
-                    writer.WriteMandatoryElement(data.Track, TRACK);
-                    writer.WriteMandatoryElement(data.Year, YEAR);
-                    writer.WriteMandatoryElement(data.Genre, GENRE);
+                    writer.WriteMandatoryElement(dto.Artist, ARTIST);
+                    writer.WriteMandatoryElement(dto.Title, TITLE);
+                    writer.WriteMandatoryElement(dto.Album, ALBUM);
+                    writer.WriteMandatoryElement(dto.Track, TRACK);
+                    writer.WriteMandatoryElement(dto.Year, YEAR);
+                    writer.WriteMandatoryElement(dto.Genre, GENRE);
 
-                    writer.WriteOptionalElement(data.AlbumArtist, ALBUM_ARTIST);
-                    writer.WriteOptionalElement(data.Compilation.HasValue && data.Compilation.Value == 0 ? null : data.Compilation, COMPILATION);
-                    writer.WriteOptionalElement(data.Disc, DISC);
+                    writer.WriteOptionalElement(dto.AccurateRipDiscId, ACCURATERIPDISCID);
+                    writer.WriteOptionalElement(dto.AlbumArtist, ALBUM_ARTIST);
+                    writer.WriteOptionalElement(dto.Compilation.HasValue && dto.Compilation.Value == 0 ? null : dto.Compilation, COMPILATION);
+                    writer.WriteOptionalElement(dto.Disc, DISC);
 
                     writer.WriteEndDocument();
                 }

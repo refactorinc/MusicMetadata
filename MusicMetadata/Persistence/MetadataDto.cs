@@ -1,31 +1,27 @@
 ﻿using System;
 
-namespace MusicMetadata
+namespace MusicMetadata.Persistence
 {
-    public class Metadata
+    public class MetadataDto
     {
-        private readonly string _filePath;
-
-        public Metadata(string filePath)
+        public MetadataDto(string id)
         {
-            if (filePath == null)
-                throw new ArgumentNullException("filePath");
+            if (id == null)
+                throw new ArgumentNullException("id");
 
-            _filePath = filePath;
+            Id = id;
         }
 
-        public string FilePath { get { return _filePath; } }
-
+        public string Id { get; private set; }
         public string Artist { get; set; }
         public string Title { get; set; }
         public string Album { get; set; }
         public string Track { get; set; }
         public int? Year { get; set; }
         public string Genre { get; set; }
+        public string AccurateRipDiscId { get; set; }
         public string AlbumArtist { get; set; }
         public int? Compilation { get; set; }
         public string Disc { get; set; }
-
-        public bool IsBroken { get; set; }
     }
 }

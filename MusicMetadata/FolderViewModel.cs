@@ -6,11 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight;
+using MusicMetadata.Persistence;
+using MusicMetadata.ViewModels;
 
 namespace MusicMetadata
 {
@@ -18,7 +21,7 @@ namespace MusicMetadata
     {
         static internal FolderViewModel Create(DirectoryInfo directoryInfo)
         {
-            Debug.WriteLine("Create FolderViewModel on Thread {0}", Thread.CurrentThread.ManagedThreadId);
+            Debug.WriteLine("[{0}] Create FolderViewModel on Thread", Thread.CurrentThread.ManagedThreadId);
             return new FolderViewModel(directoryInfo);
         }
 
@@ -31,7 +34,8 @@ namespace MusicMetadata
 
             _directoryInfo = directoryInfo;
 
-            LoadAlbumMetadata();
+            //LoadAlbumMetadata();
+            LoadAlbum();
         }
 
         public string Title
@@ -52,53 +56,88 @@ namespace MusicMetadata
             }
         }
 
-        private void LoadAlbumMetadata()
-        {
-            AlbumMetadata = AlbumMetadataViewModel.Create(_directoryInfo);
-        }
+        //private void LoadAlbumMetadata()
+        //{
+        //    AlbumMetadata = AlbumMetadataViewModel.Create(_directoryInfo);
+        //    LoadAlbum();
+        //}
 
-        private AlbumMetadataViewModel _albumMetadata;
-        public AlbumMetadataViewModel AlbumMetadata
-        {
-            get { return _albumMetadata; }
-            set
-            {
-                if (_albumMetadata != null)
-                {
-                    _albumMetadata.Tracks.CollectionChanged -= UpdateHasTracks;
-                }
-                if (value != _albumMetadata)
-                {
-                    _albumMetadata = value;
-                    RaisePropertyChanged();
-                }
-                if (_albumMetadata != null)
-                {
-                    _albumMetadata.Tracks.CollectionChanged += UpdateHasTracks;
-                }
-            }
-        }
+        //private AlbumMetadataViewModel _albumMetadata;
+        //public AlbumMetadataViewModel AlbumMetadata
+        //{
+        //    get { return _albumMetadata; }
+        //    set
+        //    {
+        //        if (_albumMetadata != null)
+        //        {
+        //            _albumMetadata.Tracks.CollectionChanged -= UpdateHasTracks;
+        //        }
+        //        if (value != _albumMetadata)
+        //        {
+        //            _albumMetadata = value;
+        //            RaisePropertyChanged();
+        //        }
+        //        if (_albumMetadata != null)
+        //        {
+        //            _albumMetadata.Tracks.CollectionChanged += UpdateHasTracks;
+        //        }
+        //    }
+        //}
 
-        private void UpdateHasTracks(object sender, EventArgs args)
-        {
-            HasTracks = AlbumMetadata.Tracks.Any();
-        }
+        //private void UpdateHasTracks(object sender, EventArgs args)
+        //{
+        //    HasTracks = AlbumMetadata.Tracks.Any();
+        //}
 
-        private bool _hasTracks;
-        public bool HasTracks
-        {
-            get { return _hasTracks; }
-            set
-            {
-                if (value != _hasTracks)
-                {
-                    _hasTracks = value;
-                    RaisePropertyChanged();
-                }
-            }
-        }
+        //private bool _hasTracks;
+        //public bool HasTracks
+        //{
+        //    get { return _hasTracks; }
+        //    set
+        //    {
+        //        if (value != _hasTracks)
+        //        {
+        //            _hasTracks = value;
+        //            RaisePropertyChanged();
+        //        }
+        //    }
+        //}
 
         static readonly Regex _regex = new Regex(REGEX_PATTERN, RegexOptions.Compiled);
         const string REGEX_PATTERN = @"^(?<title>.*?) - (?<subtitle>.*)$";
+
+
+
+        private AlbumViewModel _album;
+        public AlbumViewModel Album
+        {
+            get { return _album; }
+            set
+            {
+                if (value != _album)
+                {
+                    _album = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
+        private void LoadAlbum()
+        {
+            try
+            {
+                //var metadata = FileSystem.QueryMetadataOf(_directoryInfo.FullName).ToList();
+                //Album = AlbumViewModelFactory.FromObjects(metadata);
+                var metadata = new List<MetadataDto>();
+                Task.Run(() => FileSystem.QueryMetadataOf(_directoryInfo.FullName))
+                    .ToObservable()
+                    .ObserveOnDispatcher()
+                    .SelectMany(x => x)
+                    .Subscribe(x => metadata.Add(x), () => Album = AlbumViewModelFactory.FromObjects(metadata));
+            }
+            catch
+            {
+            }
+        }
     }
 }
